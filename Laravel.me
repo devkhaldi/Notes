@@ -1,0 +1,566 @@
+commandes :
+laravel new demo
+php artisan migrate
+php artisan make:auth
+php artisan serve
+php artisan make:migration create_cvs_table --create cvs
+php artisan make:model Cv
+php artisan make:controller CvController
+##### Création d un module :
+1- Créer le fichier de migration
+2- Générer la table
+3- Générer le model
+4- Générer le controlleur
+5- Créer les methodes de base
+index(),create(),store(),edit(),update(),destroy()
+6- Créer les routes
+Route::get('cvs','CvController@index) ;
+Route::get('cvs/create','CvController@create) ;
+Route::post('cvs','CvController@store) ;
+Route::get('cvs/{id}/edit','CvController@edit) ;
+Route::put('cvs/{id}','CvController@update) ;
+Route::delete('cvs/{id}','CvController@destroy) ;
+
+7- Créer les vues
+
+################ Ajouter un cv 
+@csrf
+form action="{{ url('cvs') }}"
+
+
+store:
+public function store(Request $request) {
+	$cv = new Cv() ;
+	$cv->titre = $request->input('titre') ;
+	$cv->save() ;
+}
+public function index() {
+	$listcv = Cv::all() ;
+	return view('cv.index',['cvs'=> $listcv]) ;
+}
+############## Modifier un cv
+
+<input type="hidden" name="_method" value="PUT" />
+public function update() {
+	 $cv = Cv::find($id) ;
+        $cv->titre = $request->input('titre') ;
+        $cv->description = $request->input('description') ;
+        $cv->save() ;
+        return redirect('cvs') ;
+}
+
+##############   SOFT delete ######
+view : 
+
+<form >
+{{ csrf_field() }}
+{{ method_field('DELETE') }}
+
+<button type="submit" >Suprimer</button>
+</form>
+
+destroy() {
+	$cv = Cv::find($id) ;
+	$cv->delete() ;
+}
+
+use Illuminate\Database\Eloquent\Model ;
+class Cv extends Model {
+	use SoftDeletes ; 
+	protected $dates = ['deleted_at'];
+}
+
+php artisan make:migration add_column_deleted_at --table=cvs
+
+up() {
+	$table->datetime('deleted_at')->nullable() ;
+}
+down() {
+	$table->dropColumn('deleted_at') ;
+}
+
+##### Système de validation
+
+php artisan make:request cvRequest
+autorize() {
+	return true ;
+}
+rules() {
+	return [
+	'titre' => 'required|min:4|max:200' ,
+	'presentation'=> 'required|min:10|max:200'
+	];
+}
+
+Controller:
+==========
+ use App\Http\Requests\cvRequest;
+
+store( cvRequest $request) {...}
+
+View :
+======
+@if(count($errors))
+	<div class="alert" >
+	<ul>
+	@foreach($errors->all() as $error)
+	<li>{{ $error }} 
+	@endforeach
+	</ul>
+	</div>
+Conserver les informations : 
+=============================
+<input value="{{ old('titre') }}" />
+
+Personaliser les messages d'erreurs :
+=====================================
+<input />
+
+@if($errors->get('titre'))
+@foreach($errors->get('titre') as $message)
+<li>{{ $message}} </li>
+@endforeach
+@endif
+
+########## Flash message #########
+
+Store() {
+	.....
+	session()->flash('success','Le cv .....') ;
+	return .....
+}
+VIEW :
+======
+
+@if(session()->has('success'))
+<div class="alert alert-success" >
+{{ session->get('success') }}	
+</div>
+@endif
+
+########### Midelware ###################
+Controller :
+========
+
+public function _construct() {
+	$this->middleware('auth') ;
+}
+
+######## Relationships ####################
+
+php artisan make:migration add_column_user_id --table=cvs
+
+up() {
+$table->integer('user_id')->unsigned()->after('id') ;
+$table->foreign('user_id')->references('id')->on('users');
+}
+down() {
+$table->dropForeign(['user_id']);
+$table->dropColumn('user_id') ;
+}
+
+php artisan migrate
+
+Controller :
+store() {
+....
+$cv->user_id = Auth::user()->id ;
+}
+
+index() {
+	$list = CV::where('user_id',Auth::user()->id)->get() ;
+}
+
+Model : user
+============
+
+public function cvs() {
+return $this->hasMany('App\Cv') ;
+}
+
+public function user() {
+return belongsTo('App\User') ;
+}
+
+View :
+======
+
+<br> {{ $cv->user->name}}
+
+Cntroller : 
+index() {
+	$list = Auth::user()->cvs ; 
+}
+
+###### Include et themes bootswatch ############
+@include('partials.menu') ;
+
+#######  Upload fichiers #######################
+intervention image => biblio
+form enctype="multipart/form-data"
+<div class="form-group">
+label
+<input class="form-control" type="file" name="photo" />
+</div>
+
+Migration :
+==========
+php artisan make:migration add_column_photo --table=cvs
+
+up() {
+	$table->string('photo')->nullable()->after('description');
+}
+down() {
+$table->dropColumn('photo') ;
+}
+php artisan migrate
+
+Controller: 
+=============
+
+go to config/filesystems.php
+local => [
+	'driver'=>'local',
+	'root' => storage_path('app/public') ,
+]
+
+
+use Illuminate\Http\UploadedFile ;
+if($request->hasFile('photo')){
+ $cv->photo = $request->file('photo')->store('image') ;
+}
+
+changer le design pour images :
+===============================
+
+form enctype="multipart/form-data"
+
+<img src="{{ asset('storage/'.$cv->photo) }}"
+
+php artisan storage:link
+
+######### Route de type Resource ######
+Route::resource('cvs','CvController');
+
+######### Policy ###########################
+php artisan make:policy CvPolicy --model=Cv
+view() { return true ; }
+create() { return true ; }
+update() { return $user->id === $cv->user_id ; }
+delete() {  return $user->id === $cv->user_id ; }
+
+// Mapping avec le model 
+
+=> providers -> AuthServiceProvider
+
+protected $policies = [
+'App\Cv' => 'App\Policies\CvPolicy' ,
+] ;
+
+Controller :
+============
+
+edit() {
+...
+$this->authorize('update',$cv) ;
+return ....
+}
+
+Personaliser 503 errors :
+========================
+ressources -> views -> errors
+
+.text-center => centrer le text
+
+
+###########  Policy avancé Admin et User ############
+
+php artisan make:migration add_column_is_admin_users --table=users
+
+up() {
+$table->boolean('is_admin')->default(0) ;
+}
+down() {
+$table->dropColumn('is_admin') ;
+}
+
+Controller :
+=========
+index() {
+if (Auth::user()->is_admin){
+$listecvs = Cv::all() ;
+}else {
+$listecvs = Auth::user()->cvs ;
+}
+}
+
+CvPolicy :
+==========
+public function before($user,$ability){
+if($user->is_admin and $ability != 'delete') {
+return true ;
+}
+}
+
+###########  Autoroziation in vue ######
+
+@can('delete',$cv)
+<button name="delete" />
+@endcan
+
+######### Afficher CV ##############
+
+.container>.row>.col-md-12
+.panel.panel-primary>(.panel-heading>h3.panel-title)+(.panel-body)
+
+panel-heading :
+.row>.col-md-10+col-md-2
+
+panel-body : 
+ul.list-group>li.list-group-item>.float-right>button
+
+<h3>
+<p> </p>
+<small></small>
+
+############ include vue JS #########
+master page : yield('javascripts')
+@section('javascripts')
+<script src="{{ asset('js/vue.js') }}" ></script>
+
+<script>
+
+var app = new Vue({
+	el:'#app',
+	data: {
+	message: 'Je suis Dev'
+	}
+});
+
+</script>
+
+
+<H1>@{{ message }}
+
+@endsection
+
+######### Ajouter axios en vue JS ##########
+
+var app = new Vue({
+el : '#app' ,
+data: {
+message:'C est le message',
+experiences : []
+},
+methods:{
+getExperiences : function() {
+axios.get('window.Laravel.url+'/getExperiences'+window.Laravel.id)
+.then(response => {
+console.log('success : ',response);
+this.experiences = response.data ;
+} )
+.catch(error => {
+console.log('errors : ',error);
+})
+}
+},
+mounted:function(){
+this.getExperiences() ;
+}
+
+})
+
+Add Route getExperiences in web.php
+
+Route::get('getExperiences','CvController@getExperiences');
+Controller :
+===========
+public function getExperiences() {
+	$experiences = Experience::all() ;
+	return $experiences ;
+}
+
+Afficher les expériences :
+
+<li v-for='experience in experiences">
+
+<h3> @{{experience.titre}}</h3>
+
+####### Modication ######
+Go to app.blade.php
+
+remove script src="app.js"
+
+<script>
+ window.Laravel={!! json_encode([
+  'csrftoken'   =>csrf_token(),
+  'idExperience'=>$id,
+  'url'    =>url('/')
+  ])!!};
+</script>?
+
+
+############### Ajouter une experience #######
+
+vue js :
+=======
+
+data : {
+open:false , 
+exeperience: [
+id : 0 ,
+cv_id:window.Laravel.id,
+titre:'',
+body:'',
+debut:'',
+fin:''
+]
+}
+methods : {
+
+addExperience : function() {
+axios.post(window.Laravel.url+'/addExperience',this.experience)
+.then(response =>{
+if (response.data.etat){
+this.open = false ;
+this.experiense.unshift(this.experience);
+this.experience = {.......}
+}
+})
+.catch()
+console.log(error);
+}
+
+}
+
+Balises : 
+=========
+<div v-if="open">
+<button @click="open = true" />
+
+<input v-model="experience.titre" />
+<button @click="addExperience"
+Controller : 
+============
+public function addExperiense(Request $request){
+$experience = new Experience();
+$experience->titre = $request->titre ;
+
+
+return Response()->json(['etat' => true,'id'=>$experience->id);
+}
+
+Controller
+========
+getExperiences() {
+return $cv->experiences()->orderBy('debut','desc')->get();
+}
+
+
+
+############## Editer expirience ########
+
+data : {
+edit:false
+}
+methods : {
+editExperience : function(experiance) {
+this.open = true 
+this.edit = true
+this.experiance = experiance
+} ,
+updateExperience : function() {
+axios.put(window.Laravel.url='/update',this.experience){
+if (response.data.etat) {
+this.open = false
+this.experience = {.....}
+this.edit = false ;
+}
+}
+}
+
+Balises :
+=========
+<button @click="editExperience(experiance)"
+
+<button v-if="edit" @click="update"></button>
+<button v-else @click="add" ></button>
+
+
+######## Suprimer Expérience #############
+
+
+suprimer : function(experience){
+axios.delete(....)
+if(response.data.etat){
+var position = this.experiences.indexOf(experience) ;
+this.experiences.splice(position,1);
+}
+}
+
+###################  SWEET ALERT ##############################
+
+##################  VeeValidate ############################
+
+ <input v-validate='required' >
+<span v-show="errors.has('titre') >
+
+
+################ READ PDF FILE Javascript #########
+jsDeliver
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@2.0.943/build/pdf.min.js"></script>
+
+
+<canvas id="my_canvas"></canvas>
+
+<script>
+pdfjsLib.getDocument('./--.pdf).then(doc => {
+
+doc.getPage(1).then(page => {
+
+var mycanvas = document.....
+var context = mycanvas.getContext("2d");
+
+var viewport = page.getViewPort(1);
+myCanvas.width = viewport.width ;
+myCanvas.hight = viewport.hight ;
+
+
+page.render({
+	canvasContext:context ,
+	viewport:viewport
+});
+
+}
+
+});
+</script>
+
+
+############ Seconde laravel tuto ###################
+
+php artisan make:model Post -m	   // create model with migrations
+php artisan make:controller PostController --resource    // create controller with functions
+
+$this->validate($request,[
+	"title" => "required"
+]);
+
+return redirect()->back();
+
+in model : 
+proteceted $fillable = [
+ 'title','contenet',.....
+] ;
+
+
+Date : 
+$firstpost->created_at->diffForHumans()
+
+
+include icons bootstrap :
+<script src="https://kit.fontawesome.com/8dfc1efb72.js"></script>
+
+// 
+$courrier->envois()->saveMany()
+

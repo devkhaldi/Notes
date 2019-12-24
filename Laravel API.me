@@ -1,0 +1,213 @@
+								Create ecommerce API using laravel
+								==================================
+1) Create API Resource controller 
+---------------------------------
+php artisan make:model Model/Product -a
+php artisan make:model Model/Review -a
+
+in the routes/api.php 
+---------------------
+	Route::apiResource('/products','ProductController') ;
+	Route::group(['prefix'=>'products'],function() {
+		Route::apiResource('/{product}/reviews','ReviewController') ;
+	})
+2) Migrations : 
+---------------
+	product(id,name,detail,price,stock,discount)
+	review(id,customer,review,start,product_id)
+		$table->bigInteger('product_id') ;
+    	$table->foreign('product_id')->references('id')->on('products')->onDelete('cascade') ;
+            
+	use Illuminate\Support\Facades\Schema;
+
+	public function boot()
+	{
+	    Schema::defaultStringLength(191);
+	}
+
+3) Database seeding with faker library:
+--------------------------------------
+	use Faker\Generator as Faker;
+
+	in ModelProductFactory : 
+	return [
+		'name' => $faker->word, 
+		'detail'=>$faker->paragraph
+		...
+	]
+
+	in ModelReviewFactory : 
+	return [
+		'product_id'=> function() {
+			return Product::all()->random();
+		}
+		'customer'=>$faker->name,
+		....
+	]
+
+	in seeds/ DatabaseSeeder.php : 
+	-----------------------------
+
+	public function run() {
+		factory(App\Model\Product::class,50)->create() ;
+		factory(App\Model\Review::class,300)->create() ;
+			
+	}
+
+	run :  php artisan db:seed
+	------
+
+4) Relations between models :
+-----------------------------
+
+php artisan tinker
+
+5) Create API Resource/Transformer
+---------------------------------- 
+
+php artisan make:resource Product/ProductCollection
+php artisan make:resource Product/ProductResource
+
+	in resources/product/ProductResource : 
+		public function toArray($request) {
+			return [
+				'name' => $this->name ,
+				'description' => $this->detail,
+				'price' => $this->price ,
+				'stock' => $this->stock ,
+				'discount' => $this->'discount',
+				'totalPrice'=> round((1 - $this->discount)*$this->price,2)
+				'rating'=>$this->reviews->count() : round($this->reviews->sum('star')/$this->reviews->count(),2)? 'no reviews',
+				'href'=> [
+					'reviews' => route('reviews.index',$this->id)
+				]
+			]
+		}
+
+	in ProductController :
+		public function show($product) {
+			return new ProductResource($product) ;
+		}
+
+6) Product Collection transforming 
+==================================
+	in ProductController :
+		index() {
+			return ProductCollection::collection(Product::all()) ;
+		}
+
+	in ProductCollection : 
+		class ProductCollection extends Resource
+		{
+		    public function toArray($request)
+		    {
+		        return [
+		            'name' => $this->name,
+		            'totalPrice'=> round((1-($this->discount/100))*$this->price,2),
+		            'rating' => $this->reviews->count() > 0 ?
+		                            round($this->reviews->sum('start')/$this->reviews->count(),2) 
+		                            : 'No reviews',
+		            'href' => [
+		                'link' => route('product.show',$this->id)
+		            ]
+		        ];
+		    }
+		}
+
+7) Configure passport :
+=======================
+
+	composer require laravel/passport
+	php artisan migrate
+	php artisan passport:install
+
+	in postman :
+	------------
+	http://localhost:8000/oauth/token
+	Header:
+	Accept = application/json
+	content-type = application/json
+	Body :
+	{
+		"grant_type" : "password",
+		"client_id" : "2" ,
+		"client_secret" : "sdqfqsdf",
+		"username" : "khaldi@gmail.com",
+		"password" : "123456"
+	}
+
+
+8 ) Create New Product :
+========================
+	in ProductController : 
+	public function __construct() {
+		$this->middleware('auth:api')->except('index','show') ;
+	}
+	
+	php artisan make:request ProductRequest
+
+	in ProductRequest.php
+	public function rules( ) {
+		return [
+			'name' => 'required|max:191|unique:products' ,
+			'description'=> 'required',
+			'price'=> 'required|max:10',
+			'stock'=> 'required|max:6',
+			'discount'=> 'required|max:2',
+		]
+	}
+
+	in ProductController.php : 
+	public function store(ProductRequest $request) {
+		$product = new Product() ;
+		$product->name : $request->name ;
+		$product->detail : $request->description ;
+		$product->price : $request->price ;
+		$product->stock : $request->stock ;
+		$product->discount : $request->discount ;
+		$product->save() ;
+		return response([
+			'data' => new ProductResource($product)
+		],Response::HTTP_CREATED) ;
+	}
+
+9) Update product details : 
+===========================
+	
+public function update (ProductRequest $request , Product $product ) {
+	$request['detail'] = $request->description ;
+	unset($request['description']) ;
+	$product->update($request->all()) ;
+	return response([
+		'data' => new ProductResource($product)
+	],Response::HTTP_CREATED) ;
+}
+
+in Product.php (Model) : 
+========================
+
+protected $fillable= ['name','description','price','stock','discount'] ;
+
+
+10) Destroy product :
+=====================
+public function destroy($product) {
+	$product->delete() ;
+	return response(null,Response::HTTP_NO_CONTENT);
+}
+
+11) Authorise product updates: 
+==============================
+	in product migration : 
+
+		$table->integer('user_id')->unsigned()->index();
+		php artisan migrate:refresh
+	in ProductFactory : add user_id
+		return [
+			'user_id' => function() {
+				return App\User::all()->random() ;
+			}
+		]
+
+	php artisan db:seed
+	

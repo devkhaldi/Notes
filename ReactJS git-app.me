@@ -1,0 +1,280 @@
+
+			React JS
+			=======
+npm i create-react-app
+create-react-app app-name
+npm start
+npm i axios  // install axios
+npm i react-router-dom
+import axios from 'axios'
+
+
+
+Create folder for components
+rce => create react component with export
+rfe => react function with export
+rconst => generate react constructor
+
+Users.js components
+render() {
+        return (
+            <div>
+                {this.state.users.map(user => (
+                    <div className="card">
+                        <img className="card-img-top" src={user.avatar_url} alt="" />
+                        <div className="card-body">
+                            <h4 className="card-title">{user.login}</h4>
+                            <p className="card-text">
+                                <a href={user.html_url} className="btn btn-success">Show profile</a>
+                                <a href={user.repos_url} className="btn btn-warning">Repositories</a>
+                            </p>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        )
+    }
+//ADD KEY
+key={user.id}
+
+
+// Get users
+
+getUsers = () => {
+        Axios.get('https://api.github.com/users')
+            .then(response => {
+                this.setState({
+                    users : response.data
+                })
+            })
+    }
+
+    componentDidMount() {
+        this.getUsers() 
+    }
+
+UserComponent :
+=============
+render() {
+const { avatar_url, login, html_url, repos_url } = this.props.userdata;
+}
+
+Data binding:
+==========
+state = {
+        search : ''
+    }
+
+    handelForm = (e) => {
+        this.setState({
+            search : e.target.value
+        })
+    }
+
+searchUsers = (e) => {
+  e.preventDefault()
+  this.props.getUserSearch(this.state.search);
+}
+
+<form onSubmit={searchUsers}>
+<input onChange={this.handelForm} value={search} />
+</form>
+
+// USERS COMPONENETS :
+
+getUsersFromGit = (data) => {
+        if (data != '') {
+            Axios.get('https://api.github.com/search/users?q=' + data)
+                .then(response => {
+                    console.log(response.data) 
+                })
+        }
+    }
+
+
+ <SearchUsers getUsersSearch={this.getUsersFromGit}/>
+
+// REACT ROUTER
+
+npm i react-router-dom
+
+App.js
+=====
+import {BrowserRouter as Router,Switch,Route} form 'react-router-dom'
+<Navbar />
+<Router>
+ <Switch>
+	<Route exact path="/users" component={Users} />
+	<Route exact path="/users/:login" component={UserItem} />
+	<Route exact  component={Users} />
+</Switch>
+</Router>
+
+UserItem.js
+==========
+state = {
+     user : {}
+}
+componentWillMount() {
+	const login = this.props.match.params.login
+	axios.get('url/'+$login)
+	.then(res => {
+	           this.setState({
+		user:res.data
+	            })
+	})
+}
+
+<User user={this.state.user} />
+
+// Navigabilite
+
+import Link from 'react-router-dom'
+<Link to={'/users/'+login} />
+
+			Javascript for react
+			================
+Difference between let and var :
+// var -> are scoped to function
+// let -> are scoped to block
+// const -> are scoped to block
+
+const person = {
+	name : 'Khaldi' ,
+	walk() {} ,
+	talk() {}
+}
+person.talk()
+person['name'] = 'john' // we use bracket notation if we don't know the property
+
+functions in javascript are objects
+
+Arrow Functions
+==============
+const square = function(number){
+	return number * number ;
+}
+	equals to :
+const square = ( number ) => {
+	return  number * number;
+} 
+
+or :  const square = number => number * number ;
+
+Ex2 :
+const jobs = [
+	{id:1 , isActive:true } ,
+	{id:2 , isActive:true } ,
+	{id:3 , isActive:false } 
+]
+const activeJobs = jobs.filter(function(job) {return job.isActive ;}) ;
+const activeJobs = jobs.filter(job => job.isActive);
+
+Arrow Functions and this : 
+=====================
+arrow function don't rebind this keyword
+
+const person = {
+	talk() {
+	var self = this ;
+	setTimeout(() => {
+		console.log("this",this)
+	},1000)
+	}
+};
+result => this, {talk : f)
+====================================
+Array.map() to render list of items :
+
+const colors = ['red','green','blue'];
+
+const items = colors.map(function(color){
+    return '<li>'+ color + '</li>' ;
+});
+or :   
+const items = colors.map((color) => {
+	return '<li>'+ color + '</li>' ;
+})
+or : 
+const items = colors.map(color => '<li>'+ color + '</li>') ;
+template letters : 
+const items = colors.map(color => `<li>${color}</li>`) ;
+
+Object destructing:
+===============
+const adress = {
+	street : '',
+	city:'' ,
+	country:''
+};
+const street = adress.street ;
+const city = adress.city ;
+const country = address.country;
+
+const {street,city,country} = address ;
+const {street:st} = address ;
+
+Spread Operator:
+==============
+const first = {name : 'khaldi'} ;
+const second = {job : 'developper'}
+const combined = {...name,...job,location:'morocco'}
+
+Classess : 
+=========
+const person = {
+name:"Khaldi",
+walk() {
+ console.log("walk");   
+ }
+}
+
+class Person {
+	constructor(name) {
+	this.name = name;
+	}
+	walk() {
+                           console.log("walk")
+	}
+}
+
+Modules: 
+========
+File = module
+classes are private by default
+export class => make it public
+in Teacher.js
+
+import  { Person } from './Person' ;
+
+export class Teacher extends Person {
+        constructor(name,degree){
+             super(name);
+              this.degree = degree;
+        }
+         teach() { }
+}
+
+Named and Default Exports :
+ we can export one or more objects from a given module
+
+// Default -> import ... from ''
+// Named -> import { ....} from ' ' ;  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

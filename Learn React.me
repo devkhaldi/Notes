@@ -1,0 +1,321 @@
+						React tutorial 
+						===========
+	1) Types of components : 
+	------------------------
+Stateless functional component => javascript function
+stateful class component => class extending component class render method runing html
+	2) Functional vs Class components :
+	-----------------------------------
+A) Functional :
+	= Simple functions
+	= use Func components as much as possible
+	= absense of 'this' keyword
+	= solution without using state
+	= Mainly responsible for the UI
+	= Stateless / Dumb / Presentational
+Note : state and lifecycle hooks can be used in func component
+B) Class :
+	= More feature rich
+	= Maintain their own private data - state
+	= Complex UI logic 
+	= Provide lifecycle hooks
+	= Stateful / Smart / Container
+
+	3) What is JSX and why it used ?
+	================================
+	= write xml-like code for elements and components
+	= JSX tags have a tag name,attributes,and children
+	= JSX is not necessity to write React applications
+	= JSX makes react code simpler and elegant
+	= JSX ultimately transpiles to pure JavaScript
+	4) Propos in React
+	===================
+	= Reusing the code and components
+	= Dynamic components
+	= Render dynamic content
+	= Props are read only(we can't assign a value to property)
+	Example :
+	App.js :
+	--------
+	<Employee firstName="Abderrahim" secondName="El khaldi" age="20" >
+        <FunctionnalCompo />
+    </Employee> <hr />
+
+ 	Employee.js : (functionnnal  component)
+ 	------------
+	function Employee(props) {
+    return (
+        <div>
+            <h2>Employee first name : {props.firstName} </h2>
+            <h2>Employee second name : {props.secondName} </h2>
+            <h2>Employee age : {props.age}</h2>
+            {props.children}
+        </div>
+    	)
+	}
+
+	(Class comoponent )
+		<h2>Employee first name : {this.props.firstName} </h2>
+
+
+	5) States in React 
+	==================
+	propos and states : hold informations that influence UI in the browser 
+		* Props vs States in React :
+		============================
+		= props get passed to the component 	VS 	State is managed within the component
+		= Function parameters					VS  Variables declared in the function body
+		= Props are immutable					VS  States can be changed
+		= props - functional components			VS  useState Hook - functional components	
+		= this.props - class components			VS  this.state - class components
+	Message component:
+	==================
+						constructor(props) {
+					        super(props)
+					        this.state = {
+					             message : 'Welcome to this website'
+					        }
+					    }
+					    changeMessage(){
+					        this.setState({
+					            message : 'Thank you for subscribing'
+					        })
+					    } 
+					    render() {
+					        return (
+					            <div>
+					                <h2>{this.state.message}</h2>
+					                <button onClick={() => this.changeMessage()}>Subscribe</button>
+					            </div>
+					        )
+					    }
+
+		Set State Notes : 
+		=================
+				= Always make use of setState and never modify the state directly
+				= if a code has to be executed after the state has been updated place that code in
+				the call back function wich is the second argument to the setState Method
+				= when you have to update state based on the previews state value , pass in a function as an agument instead of the regular object.
+
+		6) Destructuring props and state : 
+		==================================
+			A) Destructuring in function parameters
+			const Greet = ({name,heroName}) => {// function content}
+			B) Destructing in fuction body 
+				const Greet = props => {
+					const {name,heroName} = props
+				}  
+
+			C) Destructing in class component
+			render() {
+				const {name , heroName } = this.props // for props
+				const {state1 , state2 } = this.state  // for states
+			}
+
+		7) Event Handling in React
+		==========================
+		A) Events in functionnal component
+			<button onClick={showMessage}>Click here</button>
+			Event handler is a function and not a function call
+		B) Events in class component
+			<button onClick={this.showMessage}>Click me </button>
+
+		8) Event binding in react :
+		===========================
+			showMessage( ) {
+				this.setState({
+					message : 'Good by'
+				})
+				console.log(this)  		// undefieneed
+			}
+			<buuton onClick={this.showMessage}>click</button>
+			
+			A) First approche :
+			-------------------
+				<buuton onClick={this.showMessage.bind(this) }>click</button>
+			B) Second Approche:
+			-------------------
+				<buuton onClick={()=> this.showMessage()}>click</button>
+			C) Third approche:
+			------------------
+				add line in constructor : 
+					this.showMessage = this.showMessage.bind(this)
+			D) Forth approche:
+			------------------ 
+			use Arrow function : 
+							changeMessage = () => {
+						        this.setState({
+						            message : 'Good by !'
+						        })
+   					 		}
+
+   		9) Communicate child to parent component
+   		=========================================
+   		ParentCompo.js :
+   		---------------- 
+   			greetParent(param) {
+        		alert(`hello ${this.state.parentName}`)
+    		}
+   			<ChildComp greetParent={this.greetParent} />
+   		ChildCompo.js :
+   		---------------
+
+   			<button onClick={()=>props.greetParent('param')}>Greet parent</button>
+
+
+   		10) Conditional Rendering : 
+   		===========================
+   				A) if else statement
+   				---------------------
+		   		if(true) {
+		   			return (<div> content</div>)
+		   		}
+		   		else return (<div> another content</div>)
+
+		   		B) second approche
+		   		------------------
+		   		return (
+		   			this.state.isLoggedIn ?
+		   			<div>Welcome khaldi </div> :
+		   			<div> Welcome guest </div>
+		   		)
+
+		   		C) Third approch
+		   		----------------
+		   			return this.state.isLoggedIn && <div>Welcome EL khaldi</div>
+
+		  11) Lists Rendering and keys :
+		  ==============================
+		  	const personList = persons.map(person => <Person key={person.id} person={person} />)
+		  	return <div>personList</div>
+
+		  	= A key is a special string attribute you need to include when creating list of elems
+		  	= Keys give elements stable identity
+		  	= Keys help React identify wich items have changed , are added , or removed
+		  	= Help in efficient update of the user interface
+
+		  	Index as key anti-pattern:
+		  		when to use index as a key ?
+		  		= The items in your list do not have a unique id
+		  		= The list is a static list and will not change
+		  		= The list will never be reordred or filtred
+		  		ex using index :
+		  		----------------
+		  		cont namesList = names.map((name,index) => <Name key={index} name={name} />)
+
+
+		  12) Styling React components : 
+		  ==============================
+		  	(CSS Stylesheets , inline styling, CSS Modules, CSS in JS Libraries)
+		  1 - CSS Stylesheets
+		  -------------------
+		  	import './myStyles.css'
+		  	let className = 'primary'
+		  	<h1 className={}>Stylesheets</h1>
+		  2 - Inline styling :
+		  --------------------
+		  	creating objects and apply it to do style attributes
+
+		  	const heading = {
+		  		fontSize:'72px', 
+		  		color : 'blue'
+		  	}
+
+		  	<h1 style={heading}>Inline</h1>
+
+		  3 - CSS Modules :
+		  -----------------
+		  create appStyles.modules.css
+		  in componenet: 
+		  import styles from './appStyles.module.css'
+		  <h1 className={styles.success}>Success</h1>
+
+	13 : Basics of Evenet Handling: 
+	===============================
+	this.state = {
+            userName:'',
+            message: '',
+            topic: 'react'
+        }
+
+	handelUserName = event => {
+        this.setState({
+            userName : event.target.value
+        })
+    }
+
+	handelForm = event => {
+        alert(`${this.state.userName} ${this.state.message} ${this.state.topic}`)
+        event.preventDefault()
+        this.setState({
+            userName:'',
+            message: '',
+            topic: 'react'
+        })
+    }
+
+	<input type="text" onChange={this.handelUserName} value={userName}  className="form-control"/>
+
+14 : Lifecycle Methodes :
+=========================
+
+	Mounting : constructor,getDerivedStateFromProps,render and componentDidMount
+	Updating : getDerivedStateFromProps,shouldComponentUpdate,render,
+				getSnapShotBeforeUpdate and componentDidUpdate
+	Unmounting : componentWillUnmount
+	Error Handling : getDerivedStateFromError and componentDidCatch
+
+	14.1 : Mounting Lifecycle methods :
+	===================================
+			componentDidMount() => invoked immediately after a component and all its children components have been rendred to the DOM.
+								=> Interact with dom or perform ajax calls to load data
+	14.2 : Updating Lifecycle methods :
+	===================================
+			getSnapshotBeforeUpdate(prev,prevState) => called right before the changes from the virtual DOM are to be reflected in the DOM.
+			=> capture some information from the DOM
+
+15 : React Fragments : 
+======================
+Fragments let us add extra nodes without div tag:
+		<React.Fragment>
+            <h1>React Fragments</h1>
+            <p>This is a demo of react fragements</p>
+        </React.Fragment>
+
+        or :
+        === 
+        <>
+            <h1>React Fragments</h1>
+            <p>This is a demo of react fragements</p>
+        </>
+  16 - Pure componenets :
+  =======================
+  We can create a component by extending the PureComponent class .
+  A PureCompoenet implements the should ComponentUpdate lifecycle method by performing a shallow comparison on the props and state of the component.
+  if there is no difference , the component is not re-rendred-performance boost
+
+  Shallow Comparison :
+  	Primitive types => a (SC) b returns true if a and b have the same value and are the same types .
+  	Complex Types => if a and b reference the exact same object
+
+  17 - Memo component
+  ===================
+  Equivalent of Pure Component in functional compone
+
+  		export default React.memo(Memo) ;
+  
+  17 - Refs :
+  ===========
+  Refs make it possible to access dom nodes directly in react
+  	in constructor : 
+  	this.inputRef = React.createRef()
+  	in jsx :
+  	<input type="text" ref={this.inputRef} />
+
+  	get value :
+
+  	clickHandeler = () => {
+  		alert(this.inputRef.current.value)
+  	}
+
+  	Ref cannot attcach to functional component

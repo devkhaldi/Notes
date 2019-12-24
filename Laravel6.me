@@ -1,0 +1,18 @@
+Tinker :
+php artisan tinker
+// execute laravel code in cmd
+lazy collection : 
+
+$posts = Post::cursor();
+foreach($posts as $post) {
+	echo "{$post->title} \n" ;
+}
+
+Resource in routing:
+
+Route::resource('/posts','PostController')->only(['index','show']);
+
+Use Slug :
+==========
+
+$post->slug = Str::slug($post->title,'-');
