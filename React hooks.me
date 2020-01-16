@@ -1,0 +1,45 @@
+React Hooks :
+=============
+ - Hooks are new feature addition in React version 16.8
+ - They allow you to use React features without having to write a class
+ - Avoid the whole confusion with 'this' keyword
+ - Allow you to reuse stateful logic
+ - Organize the logic inside a component into reusable isolated units
+
+useState Hook
+=============
+
+function HookCounter() {
+  const [count, setcount] = useState(0);
+  return (
+    <div>
+      <button onClick={() => setcount(count + 1)}>count {count}</button>
+    </div>
+  );
+}
+
+Rules of Hooks :
+================
+"Only call Hooks at the top level"
+don't call hooks inside loops,conditions,or nested functions
+
+"Only call Hooks from react functions"
+
+Use state with previous state :
+===============================
+	
+	setCount(prevCount => prevCount + 1 )
+
+Use state with objects:
+========================
+const [name, setname] = useState({ firstName: "", secondName: "" });
+ <input
+   value={name.firstName}
+   onChange={e => setname({ ...name, firstName: e.target.value })}
+   type="text"
+   className="form-control"
+   placeholder="first name"
+/>
+
+Use state with arrays :
+=======================
