@@ -43,3 +43,208 @@ const [name, setname] = useState({ firstName: "", secondName: "" });
 
 Use state with arrays :
 =======================
+
+const [items, setitems] = useState([]);
+  const addItem = () => {
+    setitems([
+      ...items,
+      {
+        id: items.length,
+        value: Math.floor(Math.random() * 10) + 1
+      }
+    ]);
+  };
+
+<button onClick={addItem} className="btn btn-success">
+	Add Item
+</button>
+<ul>
+	{items.map(item => (
+		<li key={item.id}>{item.value}</li>
+	))}
+</ul>
+
+Use Effect state hook :
+=======================
+=The effect hook let you perform side effect in functional components.
+=It is a close replacement for componentDidMount, componentDidUpdate and componentWillUnmount.
+
+useEffect(() => {
+  document.title = `You clicked ${counter} times`;
+});
+
+Use effect run every rerender
+
+Conditionally run effects :
+	
+	componentDidUpdate(prevProps , prevState) {
+		if(prevState.count == this.state.count) {
+			document.title = `Clicked ${this.state.count} times`
+		}
+	}
+
+	useEffect(() => {
+		console.log('useEffect - Updating document title')
+		document.title = `You clicked ${cout} times`
+	},[count])
+	Execute useEffect when 'count' changed
+
+Run effects one time :
+======================
+
+const [x , setX] = useState(0)
+const [y , setY] = useState(0)
+
+
+const logMousePosition = e = {
+	console.log('Mouse event')
+	setX(e.clientX)
+	setY(e.clientY)
+}
+
+useEffect(() => {
+	console.log('useEffect called')
+	window.addEventListener('mousemove',logMousePosition)
+
+	// Use Effect with cleanup
+
+	return() => {
+		console.log('component unmounting code')
+		window.removeEventListener('mousemove',logMousePosition)
+	}
+
+},[])
+
+<div>
+	Hooks X - [x] Y - [y]
+</div>
+
+In MouseContainer :
+
+	const [display , setDisplay] = useState(true)
+	return (
+		<div>
+			<button onClick={() => setDisplay(!display)}>
+				Toggle display
+			</button>
+			{display && <HookMouse />}
+		</div>
+	)
+
+Note : we can use multiple useEffect functions in one component to separate code.
+
+
+Use Context
+===========
+context provides a way to pass data through the component tree without having to pass propos manually at every level .
+
+in App.js (parent compo or context provider) :
+----------------------------------------------
+
+export const UserContext = React.createContext()
+export const ChanelContext = React.createContext()
+
+function App() {
+	return (
+		<UserContext.Provider value={'khaldi'}>
+			<ChannelContext.Provider value={'devit'}>
+				<ComponentC />
+			</ChannelContext.Provider>
+		</UserContext.Provider>
+
+	)
+}
+
+In Component E : (or any child compo)
+-------------------------------------
+
+import React,{useContext} from 'react'
+import {UserContext,ChannnelContext} from '../App'
+
+function componentE() {
+	const user  = useContext(UserContext)
+	const channel  = useContext(ChannelContext)
+
+	return (
+		<div>
+			{user} - {channel}
+		</div>
+	)
+}
+
+UseReducer Hook:
+================
+
+useReducer is a hook that is used for state management in react
+useReducer is related to reducer functions
+
+useReducer(reducer,initialState)
+newState = reducer(currentState,action)
+useReducer returns a pair of values [newState,dispatch]
+
+import React, {useReducer} form 'react'
+
+const initialState = 0
+const reduce = (state,action) => {
+	switch(action) {
+		case 'increment' :
+			return state + 1 
+		case 'decrement' :
+			return state - 1 
+		case 'reset' :
+			return initialState
+		default : 
+			return state 
+	}
+}
+
+function CounterOne() {
+	const [count,dispatch] = useReducer(reducer,initialState)
+
+	return (
+		<div>
+			<button onClick={() => dispatch('increment')}>
+				Increment
+			</button>
+			...
+		</div>
+	)
+}
+Note : state and action could be objects
+
+Manage state globaly UseReducer with UseContext
+===============================================
+
+in App.js
+---------
+
+export const CountContext = React.createContext()
+
+
+const [count,dipatch] = useReducer(reduce,initialState)
+return (
+	<CountContext.Provider
+		value={{countState:count,countDispatch:dispatch}}
+	>
+		<div className='App'>
+			<ComponentA />
+			<ComponentB />
+			<ComponentC />
+		</div>
+	<CountContext.Provider>
+)
+
+in ComponentF :
+---------------
+
+const countContext = useContext(CountContext)
+
+return(
+	..
+	<button onClick={() => countContext.countDispatch('increment')}>
+		Increment
+	</button>
+) 
+
+Use Callback hook :
+===================
