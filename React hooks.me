@@ -248,3 +248,65 @@ return(
 
 Use Callback hook :
 ===================
+
+const incrementAge = useCallback(() => {
+	setAge(age+1)
+},[age])
+
+// age is a dependency
+
+to prevent unecessary rerenders combine use callback hooks with
+export default React.memo(Count)
+
+Use Memo hook :
+===============
+
+const isEven = useMemo(() => {
+	let i = 0
+	while(i<200000) i++ // slow down
+	return counterOne%2 === 0
+},[counterOne])
+
+<span>{isEven ? 'Even' : 'odd'}</span>
+
+Difference between useCallback and useMemo
+useCallback caches the function itself
+useMemo caches its result
+
+UseRef Hook :
+=============
+
+const inputRef = useRef(null)
+
+useEffect(() =>{
+	inputRef.current.focus()
+},[])
+
+<input ref={inputRef} type='text' />
+
+Custom Hooks :
+==============
+
+function DocTitleOne() {
+	const[count,setCount] = useState(0)
+	useDocumentTitle(count)
+	return(........)
+} 
+
+in usedocumentTitle:
+====================
+function useDocumentTitle(count) {
+	useEffect(() => {
+		document.title = '....'
+	},[])
+}
+
+
+Summary :
+=========
+	Use state: states in functional components
+	Use Effect: Life cycle methodes
+	Use Context: Pass data throgh the component tree
+	Use Reducer: State management
+	Usecallback and useMemo hook : performance optimization
+  
